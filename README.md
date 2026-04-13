@@ -43,29 +43,36 @@ Docker Compose
 🚀 Steps to Run
 
 ```
-git clone https://github.com/your-username/taskflow
+git clone https://github.com/Rishabh2743/taskflow-rishabh
 cd taskflow
+```
 
 # setup environment
+```
 cp .env.example .env
-
+```
 # run full stack (DB + API)
+``
 docker compose up --build
 ``
 🌐 Services
 Service	URL
+```
 Backend API	http://localhost:8080
-
 PostgreSQL	localhost:5432
+```
 ⚙️ Docker Setup Details
+
 📦 docker-compose.yml includes:
 PostgreSQL container
 Spring Boot API container
 Network + environment configuration
+
 🧩 Backend Dockerfile (multi-stage)
 Build stage → Maven + JDK
 Runtime stage → lightweight JDK image
 Optimized for smaller image size
+
 🗄️ Database & Migrations
 PostgreSQL used as primary DB
 Schema handled via migrations (Flyway/Liquibase)
@@ -74,9 +81,7 @@ Schema handled via migrations (Flyway/Liquibase)
 OR manually:
 
 mvn flyway:migrate
-🔑 Test Credentials
-Email:    test@example.com
-Password: password123
+
 📡 API Reference
 🔐 Auth
 POST /auth/register
@@ -106,6 +111,7 @@ Tasks	🟢 Passed
 ✔ Ensures API correctness
 
 ⚠️ Error Handling
+```
 Example Response
 {
   "error": "validation failed",
@@ -113,11 +119,13 @@ Example Response
     "email": "is required"
   }
 }
+```
 Status Codes
 400 → Validation Error
 401 → Unauthorized
 403 → Forbidden
 404 → Not Found
+
 📈 What I’d Improve With More Time
 📄 Pagination & sorting support
 📊 Project statistics endpoint
@@ -126,6 +134,7 @@ Status Codes
 ⚡ Redis caching for performance
 🔐 Rate limiting & audit logging
 💡 Highlights
+
 Production-ready API design
 Strong security implementation
 High-quality test coverage
@@ -133,4 +142,8 @@ Dockerized for easy setup
 Clean, maintainable codebase
 📎 Assignment Context
 
-This project fulfills TaskFlow backend requirements including authentication, relational modeling, REST APIs, and testing
+This project fulfills TaskFlow backend requirements including authentication, relational modeling, REST APIs, and testing.
+
+
+Rishabh Raj
+rishabh2743@gmail.com

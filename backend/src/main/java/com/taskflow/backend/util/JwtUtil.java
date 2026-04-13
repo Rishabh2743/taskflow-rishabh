@@ -2,18 +2,21 @@ package com.taskflow.backend.util;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.util.Date;
 import java.util.UUID;
 
+@Component
 public class JwtUtil {
 
-    private static final String SECRET = System.getenv("JWT_SECRET") != null
-            ? System.getenv("JWT_SECRET")
-            : "supersecretkeysupersecretkeysupersecretkey";
+    private static Key key;
 
-    private static final Key key = Keys.hmacShaKeyFor(SECRET.getBytes());
+    public JwtUtil(@Value("${jwt.secret}") String secret) {
+        key = Keys.hmacShaKeyFor(secret.getBytes());
+    }
 
     public static String generateToken(UUID userId, String email) {
         return Jwts.builder()

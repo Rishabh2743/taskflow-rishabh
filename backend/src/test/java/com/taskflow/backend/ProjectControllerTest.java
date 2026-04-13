@@ -109,20 +109,25 @@ public class ProjectControllerTest {
                 .jsonPath("$.fields.name").isEqualTo("is required");
     }
 
-    // ✅ GREEN — list projects returns 200
-    @Test
-    @Order(3)
-    void list_projects_success() {
-        String token = getToken("proj_list");
-        createProject(token, "Listed Project");
 
-        client.get().uri("/projects")
-                .header("Authorization", "Bearer " + token)
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$").isArray();
-    }
+    // ✅ GREEN — list projects returns 200
+@Test
+@Order(3)
+void list_projects_success() {
+    String token = getToken("proj_list");
+    createProject(token, "Listed Project");
+
+    client.get().uri("/projects")
+            .header("Authorization", "Bearer " + token)
+            .exchange()
+            .expectStatus().isOk()                               // ✅ 200
+            .expectBody()
+            .jsonPath("$.data").isArray()                        // ✅ data is array
+            .jsonPath("$.page").isEqualTo(1)                     // ✅ page
+            .jsonPath("$.limit").isEqualTo(10)                   // ✅ limit
+            .jsonPath("$.total").isEqualTo(1)                    // ✅ total
+            .jsonPath("$.data[0].name").isEqualTo("Listed Project"); // ✅ project present
+}
 
     // ✅ GREEN — get project by id returns project + tasks
     @Test

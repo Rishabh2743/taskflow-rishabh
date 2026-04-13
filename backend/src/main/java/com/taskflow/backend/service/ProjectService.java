@@ -1,6 +1,8 @@
 package com.taskflow.backend.service;
 
+import com.taskflow.backend.dto.PagedResponse;
 import com.taskflow.backend.dto.ProjectDetailResponse;
+import com.taskflow.backend.dto.ProjectResponse;
 import com.taskflow.backend.exception.ResourceNotFoundException;
 import com.taskflow.backend.exception.ValidationException;
 import com.taskflow.backend.model.Project;
@@ -10,13 +12,19 @@ import com.taskflow.backend.repository.TaskRepository;
 import com.taskflow.backend.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 @Service
+@Transactional(readOnly = true)
 public class ProjectService {
 
     private static final Logger log = LoggerFactory.getLogger(ProjectService.class);
@@ -33,10 +41,17 @@ public class ProjectService {
         this.taskRepository = taskRepository;
     }
 
-    public List<Project> getProjectsForUser(UUID userId) {
-        return projectRepository.findProjectsForUser(userId);
+    public PagedResponse<ProjectResponse> getProjectsForUser(UUID userId, int page, int limit) {
+        Pageable pageable = PageRequest.of(page - 1, limit, Sort.by("createdAt").descending());
+        Page<Project> result = projectRepository.findProjectsForUser(userId, pageable);
+        List<ProjectResponse> data = result.getContent()
+                .stream()
+                .map(ProjectResponse::new)
+                .toList();
+        return new PagedResponse<>(data, page, limit, result.getTotalElements());
     }
 
+    @Transactional
     public Project createProject(UUID userId, String name, String description) {
         if (name == null || name.isBlank())
             throw new ValidationException(Map.of("name", "is required"));
@@ -65,6 +80,7 @@ public class ProjectService {
                 .orElseThrow(() -> new ResourceNotFoundException("project not found"));
     }
 
+    @Transactional
     public Project updateProject(UUID userId, UUID projectId, String name, String description) {
         Project project = getRawProject(projectId);
 
@@ -78,6 +94,7 @@ public class ProjectService {
         return saved;
     }
 
+    @Transactional
     public void deleteProject(UUID userId, UUID projectId) {
         Project project = getRawProject(projectId);
 

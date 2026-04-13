@@ -1,6 +1,9 @@
 package com.taskflow.backend.controller;
 
+import com.taskflow.backend.dto.PagedResponse;
 import com.taskflow.backend.dto.ProjectDetailResponse;
+import com.taskflow.backend.dto.ProjectRequest;
+import com.taskflow.backend.dto.ProjectResponse;
 import com.taskflow.backend.exception.UnauthorizedException;
 import com.taskflow.backend.model.Project;
 import com.taskflow.backend.service.ProjectService;
@@ -9,13 +12,15 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/projects")
 public class ProjectController {
+
+    private static final int DEFAULT_PAGE = 1;
+    private static final int DEFAULT_LIMIT = 10;
+    private static final int MAX_LIMIT = 100;
 
     private final ProjectService projectService;
 
@@ -30,40 +35,70 @@ public class ProjectController {
         return JwtUtil.extractUserId(auth.substring(7));
     }
 
-    @GetMapping
-    public ResponseEntity<List<Project>> list(HttpServletRequest request) {
-        return ResponseEntity.ok(projectService.getProjectsForUser(getUserId(request)));
+    private int sanitizePage(int page) {
+        return Math.max(1, page);
     }
 
+    private int sanitizeLimit(int limit) {
+        return Math.min(Math.max(1, limit), MAX_LIMIT);
+    }
+
+    // GET /projects?page=1&limit=10
+    @GetMapping
+    public ResponseEntity<PagedResponse<ProjectResponse>> list(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int limit,
+            HttpServletRequest request) {
+
+        PagedResponse<ProjectResponse> response = projectService.getProjectsForUser(
+                getUserId(request),
+                sanitizePage(page),
+                sanitizeLimit(limit));
+
+        return ResponseEntity.ok(response);
+    }
+
+    // POST /projects
     @PostMapping
-    public ResponseEntity<Project> create(@RequestBody Map<String, String> body,
-                                          HttpServletRequest request) {
+    public ResponseEntity<ProjectResponse> create(
+            @RequestBody ProjectRequest body,
+            HttpServletRequest request) {
+
         Project p = projectService.createProject(
                 getUserId(request),
-                body.get("name"),
-                body.get("description"));
-        return ResponseEntity.status(201).body(p);
+                body.getName(),
+                body.getDescription());
+
+        return ResponseEntity.status(201).body(new ProjectResponse(p));
     }
 
+    // GET /projects/:id
     @GetMapping("/{id}")
     public ResponseEntity<ProjectDetailResponse> get(@PathVariable UUID id) {
         return ResponseEntity.ok(projectService.getProjectDetail(id));
     }
 
+    // PATCH /projects/:id
     @PatchMapping("/{id}")
-    public ResponseEntity<Project> update(@PathVariable UUID id,
-                                          @RequestBody Map<String, String> body,
-                                          HttpServletRequest request) {
+    public ResponseEntity<ProjectResponse> update(
+            @PathVariable UUID id,
+            @RequestBody ProjectRequest body,
+            HttpServletRequest request) {
+
         Project p = projectService.updateProject(
                 getUserId(request), id,
-                body.get("name"),
-                body.get("description"));
-        return ResponseEntity.ok(p);
+                body.getName(),
+                body.getDescription());
+
+        return ResponseEntity.ok(new ProjectResponse(p));
     }
 
+    // DELETE /projects/:id
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable UUID id,
-                                       HttpServletRequest request) {
+    public ResponseEntity<Void> delete(
+            @PathVariable UUID id,
+            HttpServletRequest request) {
+
         projectService.deleteProject(getUserId(request), id);
         return ResponseEntity.noContent().build();
     }
